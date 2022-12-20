@@ -6,7 +6,7 @@ Single cell sequencing processing produces clusters of cells, from which marker 
 
 This tool maybe helpful for the detection of similar/different cell types/clusters between samples.
 
-## About R code with an example
+## R code with an example
 
 To run the function you need Seurat objects that have clusters determined so that markers can be defined.
 
@@ -74,7 +74,7 @@ DimPlot(pbmcp,
 ```
 UMAP plot for the pbmcsca data.
 
-![UMAP plot of the pbmcsca data](UMAP_pbmcsca.png)
+<img src="https://github.com/djleite/Hypergeo_SingleCell_Markers/blob/main/UMAP_pbmcsca.png" width="400">
 
 
 The function can be run to compare that test dataset to itself. Clusters with similar markers have low pvalues.
@@ -85,7 +85,8 @@ p <- HGD(pbmcsca,pbmcsca,0.1,1e-3)
 p+annotate("text", y=0.99,x=1,fontface='plain',hjust=1, label = "log(p-value)")
 ```
 
-![Heatmap of the hypergeometric distribution log(pvalues)](HGD_pbmcsca.png =10x10)
+<img src="https://github.com/djleite/Hypergeo_SingleCell_Markers/blob/main/HGD_pbmcsca.png" width="400">
+
 
 
 ## The R function
