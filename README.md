@@ -100,6 +100,7 @@ library(pheatmap)
 library(ggplotify)
 library(ggplot2)
 
+##################################################################
 # GET MARKERS FROM SEURAT OBJECT FOR HYPERGEOMETRIC/FISHERS-EXACT TEST
 # <indata> needs to be a seurat object with neighbors and clusters
 # the pct and return thresh hold are adjustable
@@ -110,17 +111,20 @@ seurat_markers_for_HGD <- function(indata,pct,rthresh) {
                                         only.pos=TRUE, 
                                         min.pct = pct, 
                                         return.thresh = rthresh,
-                                        verbose=T)
+                                        verbose=F)
     
     # Return in unique marker list to test the overlap
     return(as.data.frame(cbind(as.numeric(indata.markers[["cluster"]])-1,indata.markers[["gene"]])))
 }
 
+##################################################################
 # FISHER'S EXACT TEST FOR CLUSTER MARKERS
 # <*.obj> needs to be a seurat object with neighbors and clusters
 # the pct and return thresh hold are adjustable
 
 HGD <- function(x.obj,y.obj,pct,rthresh){
+    mx <- max(as.numeric(unique(x.obj$seurat_clusters)))-1
+    my <- max(as.numeric(unique(y.obj$seurat_clusters)))-1
     
     # get markers
     x.markers <- seurat_markers_for_HGD(x.obj,pct,rthresh)
@@ -130,18 +134,21 @@ HGD <- function(x.obj,y.obj,pct,rthresh){
     options(scipen = 999)
     
     # prepare dataframe
-    df = data.frame(matrix(ncol = length(unique(x.markers$V1)), nrow = length(unique(y.markers$V1))))
-    colnames(df) <- seq(0,length(unique(x.markers$V1))-1)
+    df = data.frame(matrix(ncol = mx+1, nrow = my+1))
+
+    colnames(df) <- seq(0,mx)
     
     # for each x cluster
-    for (x in unique(x.markers$V1)){
-        
+    for (x in as.character(seq(0,mx))){
+
         # get markers for each x cluster
         clx.markers = x.markers[x.markers$V1 == x,][,2]
         dfx <- numeric()
 
         # for each y cluster
-        for (y in unique(y.markers$V1)){
+        
+    
+        for (y in as.character(seq(0,my))){
             
             # get markers for each y cluster
             cly.markers = y.markers[y.markers$V1 == y,][,2]
@@ -156,30 +163,27 @@ HGD <- function(x.obj,y.obj,pct,rthresh){
 
 
         }
-        
+
         #dfx.adjusted <- log(p.adjust(dfx, method='bonferroni'))
         df[x] <- dfx#.adjusted
 
+
     }
     
-    df <- as.data.frame(log(matrix(p.adjust(as.vector(as.matrix(df)), method='bonferroni'),ncol=length(unique(x.markers$V1)))))
-    
+    df <- as.data.frame(log(matrix(p.adjust(as.vector(as.matrix(df)), method='bonferroni'),ncol=mx+1)))
     # add cluster numbers
-    colnames(df) <- seq(0,length(unique(x.markers$V1))-1)
-    rownames(df) <- seq(0,length(unique(y.markers$V1))-1)
+    colnames(df) <- as.character(seq(0,mx))
+    rownames(df) <- as.character(seq(0,my))
     
     # dataframe adjustments
     df[sapply(df, is.infinite)] <- NA                 # replace Inf values with min of df 
     df[sapply(df, is.na)] <- min(df,na.rm = TRUE)     # replace Inf values with min of df 
     df[df == 0] <- NA                                 # replace zeros with NAs
-    
-    # USE THIS TO FILTER RESULTS 
     df[df > log(1e-5)] <- NA                          # replace values below p-value with NAs
 
-    
-    # return dataframe. You can comment out the plotting function and return the dataframe.
+    # return dataframe
     #return(df)
-    
+    #print(df)
     # turnon scientific numbers
     options(scipen = 0)
     
@@ -192,11 +196,12 @@ HGD <- function(x.obj,y.obj,pct,rthresh){
     dfmin <- as.integer(min(df,na.rm = TRUE))
     dfmax <- as.integer(max(df,na.rm = TRUE)-1)
     dfq <- as.integer((dfmin-dfmax)/4)
-    
+
     # heatmap plot
     gg <- as.ggplot(pheatmap(data.matrix(df),
-             annotation_names_row=TRUE,
-             annotation_names_col=TRUE,
+             annotation_names_row=T,
+             annotation_names_col=T,
+             show_rownames=T,
              main=' ',
              cexRow=10, 
              cexCol=10, 
@@ -210,7 +215,5 @@ HGD <- function(x.obj,y.obj,pct,rthresh){
              na_col='grey'))
     
     # return the plot
-    plot <- gg+annotate("text", y=0.99,x=1,fontface='plain',hjust=1, label = "log(p-value)")
-    return(plot)
+    return(gg)
 }
-```
