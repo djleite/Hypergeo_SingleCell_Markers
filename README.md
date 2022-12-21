@@ -1,6 +1,8 @@
 # Hypergeo_SingleCell_Markers
 R function for hypergeometric distribution test of cluster marker overlap.
 
+WARNING: If no markers are generated for a cluster then the plot will fault.
+
 ## Overview
 Single cell sequencing processing produces clusters of cells, from which marker genes can be defined. Datasets that use the same feature genes can be compared by investigating the overlap of markers from clusters. Using a hypergeometric distribution test this R function can take two Seurat objects, detect markers and compare in an all versus all cluster approach.
 
@@ -160,9 +162,10 @@ HGD <- function(x.obj,y.obj,pct,rthresh){
 
     }
     
-    df <- log(matrix(p.adjust(as.vector(as.matrix(df)), method='bonferroni'),ncol=length(unique(x.markers$V1))))
-
+    df <- as.data.frame(log(matrix(p.adjust(as.vector(as.matrix(df)), method='bonferroni'),ncol=length(unique(x.markers$V1)))))
+    
     # add cluster numbers
+    colnames(df) <- seq(0,length(unique(x.markers$V1))-1)
     rownames(df) <- seq(0,length(unique(y.markers$V1))-1)
     
     # dataframe adjustments
@@ -188,7 +191,7 @@ HGD <- function(x.obj,y.obj,pct,rthresh){
     # labels for legend
     dfmin <- as.integer(min(df,na.rm = TRUE))
     dfmax <- as.integer(max(df,na.rm = TRUE)-1)
-    dfq <- as.integer((min(df,na.rm = TRUE))/4)
+    dfq <- as.integer((dfmin-dfmax)/4)
     
     # heatmap plot
     gg <- as.ggplot(pheatmap(data.matrix(df),
@@ -201,9 +204,9 @@ HGD <- function(x.obj,y.obj,pct,rthresh){
              cluster_rows=F,
              color=myColors,
              legend=T,
-             legend_labels = c(dfmin,dfq,dfq*2,dfq*3,dfmax),
+             legend_labels = c(dfmin,dfmin-dfq,dfmin-dfq*2,dfmin-dfq*3,dfmax),
              annotation_legend=T,
-             legend_breaks=c(dfmin,dfq,dfq*2,dfq*3,dfmax),
+             legend_breaks=c(dfmin,dfmin-dfq,dfmin-dfq*2,dfmin-dfq*3,dfmax),
              na_col='grey'))
     
     # return the plot
