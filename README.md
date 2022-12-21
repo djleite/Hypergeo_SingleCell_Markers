@@ -1,7 +1,7 @@
 # Hypergeo_SingleCell_Markers
 R function for hypergeometric distribution test of cluster marker overlap.
 
-WARNING: If no markers are generated for a cluster then the plot will fault.
+WARNING: If only one value passed thresholds then the plot will fault.
 
 ## Overview
 Single cell sequencing processing produces clusters of cells, from which marker genes can be defined. Datasets that use the same feature genes can be compared by investigating the overlap of markers from clusters. Using a hypergeometric distribution test this R function can take two Seurat objects, detect markers and compare in an all versus all cluster approach.
